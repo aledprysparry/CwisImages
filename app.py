@@ -7,18 +7,20 @@ import zipfile
 import random
 
 st.set_page_config(page_title="Quiz Image Generator", layout="centered")
-st.title("🔤 Lowercase Fill-the-Blank Image Generator")
-st.markdown("Upload your Excel file to generate images that show one random letter and blanks for the rest.")
+st.title("🔤 Fill-the-Blank Image Generator (Dark Blue with Padding)")
+st.markdown("Upload your Excel file to generate images showing one random letter and blanks.")
 
 uploaded_file = st.file_uploader("Upload your .xlsx quiz file", type=["xlsx"])
 
 FONT_PATH = "fonts/Montserrat.ttf"
 BG_PATH = "background.jpg"
+TEXT_COLOR = "#002C6A"
+PADDING = 40  # padding from edges
 
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file)
-        df = df.iloc[:, 1]  # Only column B (Correct Answer)
+        df = df.iloc[:, 1]  # Column B: Correct Answer
         df = df.fillna('').astype(str)
 
         bg = Image.open(BG_PATH).convert("RGB")
@@ -28,8 +30,8 @@ if uploaded_file:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             for idx, answer in enumerate(df):
-                word = answer.lower()
-                if len(word.strip()) == 0:
+                word = answer.lower().strip()
+                if not word:
                     continue
 
                 reveal_index = random.randint(0, len(word)-1)
@@ -39,14 +41,13 @@ if uploaded_file:
                 img = bg.copy()
                 draw = ImageDraw.Draw(img)
 
-                # Use textbbox for compatibility
                 bbox = draw.textbbox((0, 0), display_text, font=font)
                 text_width = bbox[2] - bbox[0]
                 text_height = bbox[3] - bbox[1]
-                x = (image_size[0] - text_width) // 2
-                y = (image_size[1] - text_height) // 2
+                x = max((image_size[0] - text_width) // 2, PADDING)
+                y = max((image_size[1] - text_height) // 2, PADDING)
 
-                draw.text((x, y), display_text, font=font, fill='black')
+                draw.text((x, y), display_text, font=font, fill=TEXT_COLOR)
 
                 filename = f"q{idx+1:02d}_{word}.png"
                 img_bytes = io.BytesIO()
