@@ -32,7 +32,6 @@ if uploaded_file:
                 if len(word.strip()) == 0:
                     continue
 
-                # Choose a random index to reveal
                 reveal_index = random.randint(0, len(word)-1)
                 masked = [char if i == reveal_index else '_' for i, char in enumerate(word)]
                 display_text = ' '.join(masked)
@@ -40,14 +39,15 @@ if uploaded_file:
                 img = bg.copy()
                 draw = ImageDraw.Draw(img)
 
-                # Get text size and position
-                text_width, text_height = draw.textsize(display_text, font=font)
+                # Use textbbox for compatibility
+                bbox = draw.textbbox((0, 0), display_text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
                 x = (image_size[0] - text_width) // 2
                 y = (image_size[1] - text_height) // 2
 
                 draw.text((x, y), display_text, font=font, fill='black')
 
-                # Save image to zip
                 filename = f"q{idx+1:02d}_{word}.png"
                 img_bytes = io.BytesIO()
                 img.save(img_bytes, format='PNG')
